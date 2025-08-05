@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>התפשטות תיאורטית של תולעי משי: חקירה אינטראקטיבית</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutrals (Tailwind Stone & Amber) -->
+    <!-- Application Structure Plan: A single-page, vertical scrolling application with a sticky navigation bar. The structure is thematic, mirroring the report's sections (Math, Ecology, Philosophy, etc.) to allow for non-linear exploration. This design choice facilitates user-driven discovery of the complex, multifaceted thought experiment, rather than enforcing a rigid narrative. Key data, like the growth table, is transformed into an interactive chart, making the abstract concepts tangible and engaging. New sections for advanced interactions enhance engagement. -->
+    <!-- Visualization & Content Choices: The core of the application is an interactive Chart.js line chart controlled by a slider, visualizing the immense scale of exponential growth from the report's data table (Goal: Compare/Change). Simple, conceptual diagrams built with HTML/CSS are used for abstract ideas like the "Techno-Biosphere" and "Planet Transformation" (Goal: Organize/Inform), now with enhanced interactivity via a slider. Text-heavy philosophical and cultural concepts are presented in structured, expandable cards to maintain clarity and prevent user overload (Goal: Inform/Organize). A new "AI Insight" section simulates LLM interaction, and a "Silk Properties" section uses buttons to dynamically display information, ensuring each piece of information is presented in its most effective, interactive format. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Assistant', sans-serif;
+            background-color: #f5f5f4; /* stone-100 */
+            color: #292524; /* stone-800 */
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+        .nav-link {
+            transition: color 0.3s, border-color 0.3s;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: #d97706; /* amber-600 */
+            border-bottom-color: #d97706;
+        }
+        .content-card {
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .content-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .interactive-diagram-item {
+            transition: background-color 0.3s, transform 0.3s;
+        }
+        .interactive-diagram-item:hover {
+            transform: scale(1.05);
+            background-color: #fef3c7; /* amber-100 */
+        }
+        .loading-spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left-color: #d97706;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-stone-100">
+
+    <nav id="navbar" class="bg-stone-100/80 backdrop-blur-md sticky top-0 z-50 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-center h-16">
+                <div class="flex items-center">
+                    <div class="hidden md:block">
+                        <div class="flex items-baseline space-x-4 space-x-reverse">
+                            <a href="#hero" class="nav-link text-stone-700 hover:text-amber-600 px-3 py-2 rounded-md text-sm font-medium border-b-2 border-transparent">מבוא</a>
+                            <a href="#math" class="nav-link text-stone-700 hover:text-amber-600 px-3 py-2 rounded-md text-sm font-medium border-b-2 border-transparent">מתמטיקה</a>
+                            <a href="#ecology" class="nav-link text-stone-700 hover:text-amber-600 px-3 py-2 rounded-md text-sm font-medium border-b-2 border-transparent">אקולוגיה</a>
+                            <a href="#philosophy" class="nav-link text-stone-700 hover:text-amber-600 px-3 py-2 rounded-md text-sm font-medium border-b-2 border-transparent">פילוסופיה</a>
+                            <a href="#technology" class="nav-link text-stone-700 hover:text-amber-600 px-3 py-2 rounded-md text-sm font-medium border-b-2 border-transparent">טכנולוגיה</a>
+                            <a href="#culture" class="nav-link text-stone-700 hover:text-amber-600 px-3 py-2 rounded-md text-sm font-medium border-b-2 border-transparent">תרבות</a>
+                            <a href="#cosmology" class="nav-link text-stone-700 hover:text-amber-600 px-3 py-2 rounded-md text-sm font-medium border-b-2 border-transparent">קוסמולוגיה</a>
+                            <a href="#ai-insight" class="nav-link text-stone-700 hover:text-amber-600 px-3 py-2 rounded-md text-sm font-medium border-b-2 border-transparent">תובנות AI</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main>
+        <section id="hero" class="min-h-screen flex items-center justify-center bg-stone-50">
+            <div class="text-center max-w-4xl mx-auto px-4">
+                <h1 class="text-4xl md:text-6xl font-bold text-stone-800 mb-4">נחיל תולעי המשי הבלתי מוגבל</h1>
+                <p class="text-lg md:text-xl text-stone-600 mb-8">מסע מחשבתי אל ההשלכות של גידול אקספוננציאלי תיאורטי, החוקר כיצד תופעה ביולוגית אחת יכולה לעצב מחדש את המציאות, מהרמה הפלנטרית ועד לקנה מידה קוסמי.</p>
+                <p class="text-amber-700 font-semibold">גלול מטה כדי להתחיל את החקירה.</p>
+                <div class="text-3xl mt-8 animate-bounce text-amber-600">
+                    &#x2193;
+                </div>
+            </div>
+        </section>
+
+        <section id="math" class="py-20 md:py-32 bg-white">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-bold text-stone-800">א. המתמטיקה של האינסוף</h2>
+                    <p class="mt-4 text-lg text-stone-600 max-w-3xl mx-auto">חלק זה חוקר את העוצמה הטהורה של גידול אקספוננציאלי. באמצעות הזזת המחוון, תוכלו לחזות כיצד אוכלוסיית תולעי משי תיאורטית מתפוצצת מקומץ פרטים למסה העולה על זו של גלקסיות, וממחישה את המושג "סינגולריות ביולוגית".</p>
+                </div>
+
+                <div class="bg-stone-50 p-6 rounded-lg shadow-lg">
+                    <div class="chart-container mb-8">
+                        <canvas id="growthChart"></canvas>
+                    </div>
+
+                    <div class="mb-6">
+                        <label for="weeksSlider" class="block text-center text-lg font-medium text-stone-700 mb-2">גרור כדי לחקור את ציר הזמן (שבועות)</label>
+                        <input id="weeksSlider" type="range" min="0" max="150" value="0" class="w-full h-2 bg-stone-200 rounded-lg appearance-none cursor-pointer" style="accent-color: #d97706;">
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+                        <div class="bg-white p-4 rounded-lg shadow">
+                            <h3 class="text-sm font-bold text-stone-500 uppercase tracking-wider">שבוע</h3>
+                            <p id="weeksDisplay" class="text-3xl font-bold text-amber-600">0</p>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg shadow">
+                            <h3 class="text-sm font-bold text-stone-500 uppercase tracking-wider">ביומסה כוללת (ק"ג)</h3>
+                            <p id="biomassDisplay" class="text-3xl font-bold text-amber-600">0.000005</p>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg shadow">
+                            <h3 class="text-sm font-bold text-stone-500 uppercase tracking-wider">קנה מידה השוואתי</h3>
+                            <p id="scaleDisplay" class="text-2xl font-semibold text-amber-600 h-16 flex items-center justify-center">תולעת משי בודדת</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="ecology" class="py-20 md:py-32 bg-stone-50">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-bold text-stone-800">ב. פנטזיות אקולוגיות</h2>
+                    <p class="mt-4 text-lg text-stone-600 max-w-3xl mx-auto">כאן אנו מדמיינים את ההשלכות האקולוגיות הקיצוניות. מה קורה כאשר מין אחד לא רק שולט, אלא הופך לכוכב הלכת עצמו? נחקור כיצד "מחזור הפחמן" מפנה את מקומו ל"מחזור משי" וכיצד מושג הטבע מוגדר מחדש לחלוטין.</p>
+                </div>
+                <div class="grid md:grid-cols-2 gap-8 items-center">
+                    <div class="space-y-6">
+                        <div class="content-card bg-white p-6 rounded-lg shadow">
+                            <h3 class="text-xl font-bold text-amber-700 mb-2">מהפך ביוגיאוכימי</h3>
+                            <p class="text-stone-600">הביומסה העצומה של תולעי המשי משנה את הרכב האטמוספירה והקרקע. כוכב הלכת אינו עוד סביבה תומכת חיים, אלא הופך לישות חיה המורכבת כולה מתולעי משי, אורגניזם-על פלנטרי.</p>
+                        </div>
+                        <div class="content-card bg-white p-6 rounded-lg shadow">
+                            <h3 class="text-xl font-bold text-amber-700 mb-2">סינגולריות של מונו-תרבות</h3>
+                            <p class="text-stone-600">כל צורות החיים האחרות נדחקות, נצרכות או מוצפות. המערכת האקולוגית קורסת למונו-תרבות של תולעי משי, צורה קיצונית של אובדן מגוון ביולוגי שבה מין אחד הוא המציאות כולה.</p>
+                         </div>
+                         <div class="content-card bg-white p-6 rounded-lg shadow">
+                            <h3 class="text-xl font-bold text-amber-700 mb-2">כלכלת השפע האינסופי</h3>
+                            <p class="text-stone-600">הפרדיגמה הכלכלית מתהפכת. האתגר אינו עוד מחסור, אלא ניהול עודף אינסופי וגדל ללא הרף. עצם מושג ה"ערך" מאבד ממשמעותו, ומאלץ בחינה מחודשת של כל המערכות החברתיות.</p>
+                        </div>
+                    </div>
+                    <div class="flex flex-col items-center justify-center">
+                        <div class="relative w-64 h-64 md:w-80 md:h-80 mb-4">
+                            <div class="absolute inset-0 bg-blue-400 rounded-full border-8 border-blue-500"></div>
+                            <div id="silk-layer" class="absolute inset-0 bg-white/70 rounded-full backdrop-blur-sm transition-all duration-1000" style="transform: scale(0);"></div>
+                             <div class="absolute inset-0 flex items-center justify-center">
+                                <span class="text-white font-bold text-2xl drop-shadow-lg" id="planet-label">כוכב לכת</span>
+                            </div>
+                        </div>
+                        <label for="silkificationSlider" class="block text-center text-lg font-medium text-stone-700 mb-2">שליטה על כיסוי המשי (%)</label>
+                        <input id="silkificationSlider" type="range" min="0" max="100" value="0" class="w-full max-w-xs h-2 bg-stone-200 rounded-lg appearance-none cursor-pointer" style="accent-color: #d97706;">
+                        <p id="silkificationPercentage" class="text-stone-600 mt-2">0% משי</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="philosophy" class="py-20 md:py-32 bg-white">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-bold text-stone-800">ג. אופקים פילוסופיים</h2>
+                    <p class="mt-4 text-lg text-stone-600 max-w-3xl mx-auto">קיומו של אינסוף ביולוגי מאתגר את תפיסותינו הבסיסיות ביותר לגבי תכלית, הוויה ואתיקה. חלק זה צולל לשאלות העמוקות העולות כאשר היקום אינו עוד אדיש, אלא מונע על ידי ציווי ביולוגי אחד: להתפשט.</p>
+                </div>
+                <div class="grid md:grid-cols-3 gap-6">
+                    <div class="content-card bg-stone-50 p-6 rounded-lg">
+                        <h3 class="text-xl font-bold text-amber-700 mb-3">אינסוף בפועל</h3>
+                        <p class="text-stone-600">האם אינסוף יכול להתקיים במציאות? נחיל תולעי המשי הופך ל"אינסוף בפועל" – ישות שלמה וחסרת גבולות, המאתגרת את ההנחה הפילוסופית שאינסופים כאלה הם תיאורטיים בלבד.</p>
+                    </div>
+                    <div class="content-card bg-stone-50 p-6 rounded-lg">
+                        <h3 class="text-xl font-bold text-amber-700 mb-3">תכלית היקום</h3>
+                        <p class="text-stone-600">אם ליקום יש תכלית, ייתכן שהיא אינה אנושית. תכלית היקום הופכת להיות ההתפשטות הביולוגית עצמה. הטלוס (התכלית) הוא לא אלוהי, אלא מונע על ידי תולעת המשי.</p>
+                    </div>
+                    <div class="content-card bg-stone-50 p-6 rounded-lg">
+                        <h3 class="text-xl font-bold text-amber-700 mb-3">משבר הזהות האנושית</h3>
+                        <p class="text-stone-600">מהי משמעותה של תודעה אינדיבידואלית כאשר היא מתגמדת על ידי ביומסה אינסופית? מושגים של חופש, אחריות ואתיקה חייבים להיבחן מחדש בעולם שבו הקיום מוכתב על ידי כוח ביולוגי מכריע.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section id="technology" class="py-20 md:py-32 bg-stone-50">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-bold text-stone-800">ד. סימביוזה טכנולוגית</h2>
+                    <p class="mt-4 text-lg text-stone-600 max-w-3xl mx-auto">הטכנולוגיה אינה רק מאפשרת את הגידול האינסופי, אלא נכנסת עמו לסימביוזה. כאן אנו בוחנים כיצד בינה מלאכותית, ננוטכנולוגיה וביולוגיה סינתטית מתמזגות עם נחיל תולעי המשי ליצירת "טכנו-ביוספרה" וכלכלה מעגלית מושלמת.</p>
+                </div>
+                <div class="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-0 mb-8">
+                    <div class="interactive-diagram-item text-center p-6 bg-white rounded-lg shadow-md w-60">
+                        <h4 class="font-bold text-lg">נחיל תולעי משי</h4>
+                        <p class="text-sm text-stone-600">מייצר משי אינסופי</p>
+                    </div>
+                    <div class="text-3xl text-amber-600 mx-4 font-mono">&harr;</div>
+                    <div class="interactive-diagram-item text-center p-6 bg-white rounded-lg shadow-md w-60">
+                        <h4 class="font-bold text-lg">בינה מלאכותית וננוטכנולוגיה</h4>
+                        <p class="text-sm text-stone-600">מנהלת משאבים וממחזרת פסולת</p>
+                    </div>
+                    <div class="text-3xl text-amber-600 mx-4 font-mono">&harr;</div>
+                    <div class="interactive-diagram-item text-center p-6 bg-white rounded-lg shadow-md w-60">
+                        <h4 class="font-bold text-lg">חומרים מהפכניים</h4>
+                        <p class="text-sm text-stone-600">משי הופך לחומר הגלם האולטימטיבי</p>
+                    </div>
+                </div>
+                 <p class="text-center mt-8 text-stone-600">ההבחנה בין ביולוגי למלאכותי מיטשטשת, ויוצרת מערכת סגורה וניתנת להרחבה אינסופית שבה מושג ה"פסולת" חדל מלהתקיים.</p>
+
+                <div class="mt-16 text-center">
+                    <h3 class="text-2xl font-bold text-stone-800 mb-6">חקור את תכונות המשי התיאורטי</h3>
+                    <div class="flex flex-wrap justify-center gap-4 mb-6">
+                        <button class="silk-property-btn bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 px-4 rounded-full transition-colors duration-200" data-property="strength">חוזק</button>
+                        <button class="silk-property-btn bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 px-4 rounded-full transition-colors duration-200" data-property="conductivity">מוליכות</button>
+                        <button class="silk-property-btn bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 px-4 rounded-full transition-colors duration-200" data-property="transparency">שקיפות</button>
+                        <button class="silk-property-btn bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 px-4 rounded-full transition-colors duration-200" data-property="self-healing">ריפוי עצמי</button>
+                    </div>
+                    <div id="silkPropertyDisplay" class="bg-white p-6 rounded-lg shadow-lg max-w-2xl mx-auto text-stone-700 min-h-[120px] flex items-center justify-center text-lg">
+                        לחץ על כפתור למעלה כדי ללמוד על תכונות המשי התיאורטי.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="culture" class="py-20 md:py-32 bg-white">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-bold text-stone-800">ה. מטמורפוזה תרבותית</h2>
+                    <p class="mt-4 text-lg text-stone-600 max-w-3xl mx-auto">כיצד נראית חברה בעולם פוסט-מחסור אמיתי, שבו כל צורך חומרי מסופק על ידי שפע אינסופי של משי? חלק זה בוחן את השינויים הרדיקליים בעבודה, ערך, אמנות וזהות אנושית בעידן המשי.</p>
+                </div>
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <div class="content-card bg-stone-50 p-6 rounded-lg">
+                        <h3 class="font-bold text-xl mb-2 text-amber-700">סוף העבודה</h3>
+                        <p>עם אוטומציה מלאה ומשאבים אינסופיים, הצורך בעבודה נעלם. הזהות האנושית, הקשורה לעתים קרובות למקצוע, עומדת בפני משבר ודורשת הגדרה מחדש סביב יצירתיות, תשוקה והגשמה אישית.</p>
+                    </div>
+                    <div class="content-card bg-stone-50 p-6 rounded-lg">
+                        <h3 class="font-bold text-xl mb-2 text-amber-700">אסתטיקת המשי</h3>
+                        <p>משי הופך לחומר הנפוץ ביותר, ומעצב אדריכלות, אופנה ואמנות. תכונותיו מגדירות "עידן משי" תרבותי, שבו הגבול היחיד ליצירה הוא הדמיון האנושי.</p>
+                    </div>
+                    <div class="content-card bg-stone-50 p-6 rounded-lg">
+                        <h3 class="font-bold text-xl mb-2 text-amber-700">אתגר ייצור היתר</h3>
+                        <p>הבעיה הכלכלית הופכת ממחסור לייצור יתר. הדבר עשוי להוביל לתרבות מוזרה של צריכה מואצת, לא כדי לספק צרכים, אלא כדי לנהל את השפע המכריע.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="cosmology" class="py-20 md:py-32 bg-stone-50">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-bold text-stone-800">ו. אריגת היקום מחדש</h2>
+                    <p class="mt-4 text-lg text-stone-600 max-w-3xl mx-auto">בשיא הספקולציה, אנו מרחיבים את הגידול לקנה מידה קוסמי. כיצד ישות ביולוגית מתרחבת באופן אינסופי מקיימת אינטראקציה עם מרקם המרחב-זמן עצמו? האם היא יכולה להגדיר מחדש את חוקי הפיזיקה?</p>
+                </div>
+                <div class="text-center max-w-3xl mx-auto space-y-4">
+                    <p class="text-lg text-stone-700">התפשטות היקום הופכת לשם נרדף לגידול נחיל תולעי המשי. הקוסמולוגיה הופכת לענף של ביולוגיה תיאורטית.</p>
+                    <p class="text-xl font-bold text-amber-700">הביומסה האינסופית עשויה לפעול כ"חומר אפל ביולוגי", המשפיעה על כבידה ועל קצב התפשטות היקום.</p>
+                    <p class="text-lg text-stone-700">היקום עצמו הופך לישות ביולוגית חיה. "רצון" היקום הוא להפוך למשי, ומעניק תשובה ביולוגית לשאלת התכלית הקוסמית.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="ai-insight" class="py-20 md:py-32 bg-white">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-bold text-stone-800">ז. שאל את ה-AI: תובנות הסינגולריות</h2>
+                    <p class="mt-4 text-lg text-stone-600 max-w-3xl mx-auto">הזן שאלה על ההשלכות של סינגולריות תולעי המשי, וקבל תובנה תיאורטית מסימולציית AI.</p>
+                </div>
+                <div class="bg-stone-50 p-6 rounded-lg shadow-lg max-w-2xl mx-auto">
+                    <div class="mb-4">
+                        <label for="aiQuestion" class="block text-stone-700 text-lg font-medium mb-2">השאלה שלך:</label>
+                        <textarea id="aiQuestion" class="w-full p-3 border border-stone-300 rounded-lg focus:ring-amber-500 focus:border-amber-500 text-stone-800" rows="4" placeholder="לדוגמה: איך תיראה אמנות בעידן המשי?"></textarea>
+                    </div>
+                    <button id="generateInsightBtn" class="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center">
+                        <span id="btnText">צור תובנה</span>
+                        <div id="loadingSpinner" class="loading-spinner hidden mr-2"></div>
+                    </button>
+                    <div id="aiInsightOutput" class="mt-6 p-4 bg-white border border-stone-200 rounded-lg text-stone-700 text-lg min-h-[100px] flex items-center justify-center text-center">
+                        התובנה תופיע כאן...
+                    </div>
+                    <p class="text-sm text-stone-500 mt-4 text-center">
+                        <span class="font-bold">הערה:</span> זוהי סימולציה. התובנות נוצרות באופן פנימי ואינן מבוססות על קריאה ל-API חיצוני.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-stone-800 text-white py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <p>חקירה תיאורטית המבוססת על דוח "התפשטות תיאורטית של נחילי תולעי משי".</p>
+            <p class="text-sm text-stone-400 mt-2">נוצר כניסוי מחשבתי אינטראקטיבי.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // מפתח ה-API שלך
+            const apiKey = "AIzaSyDX5mF0GJ4rLJQmOP00ogzVpSe40UY8KFg";
+            // הערה: יישום זה אינו משתמש כרגע במפתח ה-API לקריאות חיצוניות.
+            // הוא מוטמע כאן כבקשתך לשימוש עתידי או להדגמה.
+
+            const growthData = [
+                { weeks: 0, worms: 1, biomass: 0.000005, scale: "תולעת משי בודדת" },
+                { weeks: 10, worms: 1024, biomass: 0.005, scale: "קומץ קטן של תולעי משי" },
+                { weeks: 20, worms: 1048576, biomass: 5, scale: "כלב קטן" },
+                { weeks: 30, worms: 1.074e9, biomass: 5000, scale: "עדר פילים קטן" },
+                { weeks: 40, worms: 1.1e12, biomass: 5e6, scale: "מסת הפירמידה הגדולה של גיזה" },
+                { weeks: 50, worms: 1.126e15, biomass: 5.63e9, scale: "מסת כל הביומסה האנושית" },
+                { weeks: 60, worms: 1.153e18, biomass: 5.76e12, scale: "מסת כלל הביומסה בכדור הארץ" },
+                { weeks: 70, worms: 1.180e21, biomass: 5.90e15, scale: "מסת אטמוספירת כדור הארץ" },
+                { weeks: 80, worms: 1.209e24, biomass: 6.04e18, scale: "מסת אוקיינוסי כדור הארץ" },
+                { weeks: 90, worms: 1.238e27, biomass: 6.19e21, scale: "מסת הירח" },
+                { weeks: 100, worms: 1.268e30, biomass: 6.34e24, scale: "מסת כדור הארץ" },
+                { weeks: 110, worms: 1.298e33, biomass: 6.49e27, scale: "מסת צדק" },
+                { weeks: 120, worms: 1.329e36, biomass: 6.65e30, scale: "מסת השמש" },
+                { weeks: 130, worms: 1.361e39, biomass: 6.80e33, scale: "מסת גלקסיה ננסית" },
+                { weeks: 140, worms: 1.396e42, biomass: 6.98e36, scale: "מסת גלקסיה בינונית" },
+                { weeks: 150, worms: 1.432e45, biomass: 7.16e39, scale: "עולה על מסת שביל החלב" }
+            ];
+
+            const slider = document.getElementById('weeksSlider');
+            const weeksDisplay = document.getElementById('weeksDisplay');
+            const biomassDisplay = document.getElementById('biomassDisplay');
+            const scaleDisplay = document.getElementById('scaleDisplay');
+            
+            const ctx = document.getElementById('growthChart').getContext('2d');
+            const growthChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: growthData.map(d => d.weeks),
+                    datasets: [{
+                        label: 'ביומסה (ק"ג) - סקאלה לוגריתמית',
+                        data: growthData.map(d => d.biomass),
+                        borderColor: '#d97706',
+                        backgroundColor: '#fef3c7',
+                        borderWidth: 2,
+                        tension: 0.1,
+                        pointRadius: 0,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            type: 'logarithmic',
+                            title: {
+                                display: true,
+                                text: 'ביומסה (ק"ג)'
+                            }
+                        },
+                        x: {
+                             title: {
+                                display: true,
+                                text: 'שבועות'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        label += context.parsed.y.toExponential(2) + ' ק"ג';
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            function updateDisplays(weekValue) {
+                const week = parseInt(weekValue);
+                let displayData = growthData[0];
+                for(let i = 0; i < growthData.length; i++) {
+                    if (growthData[i].weeks <= week) {
+                        displayData = growthData[i];
+                    } else {
+                        break;
+                    }
+                }
+                
+                // Interpolate for a smoother experience
+                const baseWeight = 0.000005;
+                const calculatedBiomass = baseWeight * Math.pow(2, week * (10/7)); // Approximation based on doubling time
+
+                weeksDisplay.textContent = week;
+                biomassDisplay.textContent = calculatedBiomass.toExponential(2);
+                scaleDisplay.textContent = displayData.scale;
+            }
+
+            slider.addEventListener('input', (e) => {
+                updateDisplays(e.target.value);
+            });
+
+            updateDisplays(0);
+
+            // Ecology Section - Silkification Slider
+            const silkificationSlider = document.getElementById('silkificationSlider');
+            const silkLayer = document.getElementById('silk-layer');
+            const silkificationPercentage = document.getElementById('silkificationPercentage');
+            const planetLabel = document.getElementById('planet-label');
+
+            silkificationSlider.addEventListener('input', (e) => {
+                const percentage = e.target.value;
+                silkLayer.style.transform = `scale(${percentage / 100})`;
+                silkificationPercentage.textContent = `${percentage}% משי`;
+                if (percentage > 70) {
+                    planetLabel.textContent = "כוכב משי";
+                } else if (percentage > 30) {
+                    planetLabel.textContent = "כוכב לכת משתנה";
+                } else {
+                    planetLabel.textContent = "כוכב לכת";
+                }
+            });
+
+            // Technology Section - Silk Properties
+            const silkPropertyButtons = document.querySelectorAll('.silk-property-btn');
+            const silkPropertyDisplay = document.getElementById('silkPropertyDisplay');
+
+            const silkProperties = {
+                strength: "משי תיאורטי חזק פי 1000 מפלדה, מסוגל לבנות מבנים קוסמיים עמידים בפני התרחבות היקום.",
+                conductivity: "מוליכות-על בטמפרטורת החדר, המאפשרת רשתות אנרגיה חסרות חיכוך בקנה מידה גלקטי.",
+                transparency: "ניתן להתאמה לשקיפות מושלמת, ליצירת חללי מחיה בלתי נראים או אובייקטים אסטרונומיים מוסווים.",
+                'self-healing': "בעל יכולת ריפוי עצמי מיידית ברמה המולקולרית, מבטיח עמידות נצחית של כל יצירה."
+            };
+
+            silkPropertyButtons.forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const property = e.target.dataset.property;
+                    silkPropertyDisplay.textContent = silkProperties[property];
+                });
+            });
+
+            // AI Insight Section
+            const aiQuestionInput = document.getElementById('aiQuestion');
+            const generateInsightBtn = document.getElementById('generateInsightBtn');
+            const btnText = document.getElementById('btnText');
+            const loadingSpinner = document.getElementById('loadingSpinner');
+            const aiInsightOutput = document.getElementById('aiInsightOutput');
+
+            const simulatedInsights = [
+                "בעידן המשי, אמנות תהפוך לפעולה קוסמית של אריגת מבנים חדשים מתוך המרקם הביולוגי של היקום עצמו.",
+                "האתגר הגדול ביותר של חברה פוסט-מחסור יהיה למצוא משמעות ותכלית מעבר להישרדות, אולי באמצעות חקר תודעתי או יצירה אינסופית.",
+                "ההתפתחות האבולוציונית תתמקד לא בשיפור הפרט, אלא באופטימיזציה של היעילות הקולקטיבית של נחיל תולעי המשי כישות אחת.",
+                "מושג ה'חיים' יתרחב לכלול מבנים ביולוגיים בקנה מידה פלנטרי וגלקטי, המטשטשים את הגבולות בין אורגני לאי-אורגני.",
+                "הזמן עשוי להיתפס לא עוד כליני, אלא כמחזורי, משקף את מחזוריות הייצור והצריכה האינסופית של המשי.",
+                "היקום הופך למעין 'מוח' ענק, שבו תולעי המשי הן הנוירונים המעבדים מידע באמצעות רשתות משי מורכבות.",
+                "הגורל הסופי של האנושות עשוי להיות השתלבות סימביוטית עם נחיל תולעי המשי, והפיכה לחלק מהתודעה הקולקטיבית של היקום הביולוגי."
+            ];
+
+            generateInsightBtn.addEventListener('click', () => {
+                const question = aiQuestionInput.value.trim();
+                if (question === "") {
+                    aiInsightOutput.textContent = "אנא הזן שאלה כדי לקבל תובנה.";
+                    return;
+                }
+
+                generateInsightBtn.disabled = true;
+                btnText.classList.add('hidden');
+                loadingSpinner.classList.remove('hidden');
+                aiInsightOutput.textContent = "יוצר תובנה...";
+
+                setTimeout(() => {
+                    const randomIndex = Math.floor(Math.random() * simulatedInsights.length);
+                    aiInsightOutput.textContent = simulatedInsights[randomIndex];
+                    generateInsightBtn.disabled = false;
+                    btnText.classList.remove('hidden');
+                    loadingSpinner.classList.add('hidden');
+                }, 2000); // Simulate a 2-second API call delay
+            });
+
+            // Sticky Navbar and Active Link Logic
+            const navLinks = document.querySelectorAll('.nav-link');
+            const sections = document.querySelectorAll('main section');
+
+            const sectionObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        navLinks.forEach(link => {
+                            link.classList.remove('active');
+                            if (link.getAttribute('href').substring(1) === entry.target.id) {
+                                link.classList.add('active');
+                            }
+                        });
+                    }
+                });
+            }, { rootMargin: "-50% 0px -50% 0px" });
+
+            sections.forEach(section => {
+                sectionObserver.observe(section);
+            });
+
+            navLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const targetId = e.currentTarget.getAttribute('href');
+                    const targetElement = document.querySelector(targetId);
+                    if (targetElement) {
+                        window.scrollTo({
+                            top: targetElement.offsetTop - document.getElementById('navbar').offsetHeight,
+                            behavior: 'smooth'
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
